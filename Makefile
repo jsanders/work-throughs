@@ -1,4 +1,4 @@
-all: build bin bin/hello
+all: build bin bin/hello bin/template
 
 build:
 	mkdir build
@@ -6,11 +6,23 @@ build:
 bin:
 	mkdir bin
 
+ASM := nasm -f elf -g -F stabs
+LD := ld
+
 build/hello.o: src/hello.s
-	nasm -f elf -g -F stabs -o $@ $<
+	$(ASM) -o $@ $<
 
 bin/hello: build/hello.o
-	ld -o $@ $<
+	$(LD) -o $@ $<
+
+build/template.o: src/template.s
+	$(ASM) -o $@ $<
+
+bin/template: build/template.o
+	$(LD) -o $@ $<
+
+debug:
+	make bin/template && gdb -x .gdbinit bin/template
 
 clean:
 	rm -rf build bin
