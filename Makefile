@@ -1,4 +1,4 @@
-all: build bin bin/hello bin/template
+all: build bin bin/hello bin/template bin/upcase
 
 build:
 	mkdir build
@@ -9,19 +9,19 @@ bin:
 ASM := nasm -f elf -g -F stabs
 LD := ld
 
-build/hello.o: src/hello.s
+build/hello.o: src/hello.asm
 	$(ASM) -o $@ $<
 
 bin/hello: build/hello.o
 	$(LD) -o $@ $<
 
-build/template.o: src/template.s
+build/template.o: src/template.asm
 	$(ASM) -o $@ $<
 
 bin/template: build/template.o
 	$(LD) -o $@ $<
 
-build/upcase.o: src/upcase.s
+build/upcase.o: src/upcase.asm
 	$(ASM) -o $@ $<
 
 bin/upcase: build/upcase.o
