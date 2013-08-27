@@ -1,4 +1,4 @@
-all: build bin bin/hello bin/template bin/upcase
+all: build bin bin/hello bin/template bin/upcase bin/hexdump
 
 build:
 	mkdir build
@@ -27,6 +27,11 @@ build/upcase.o: src/upcase.asm
 bin/upcase: build/upcase.o
 	$(LD) -o $@ $<
 
+build/hexdump.o: src/hexdump.asm
+	$(ASM) -o $@ $<
+
+bin/hexdump: build/hexdump.o
+	$(LD) -o $@ $<
 debug:
 	make bin/template && gdb -x .gdbinit bin/template
 
