@@ -2,8 +2,8 @@
 ; upcase < file > upcased
 
 section .bss
-	Buffer: resb 1		; byte buffer
 	BufferSize: equ 1024
+	Buffer: resb BufferSize	
 
 section .data
 
@@ -24,9 +24,9 @@ Read:
 
 	mov ecx, esi		; Number of characters read in ecx
 	mov ebp, Buffer		; Address of Buffer
-	dec ebp			; Avoid off-by-one
 
 Scan:
+	dec ecx			; Decrement ecx
 	cmp byte [ebp+ecx], 0x61; Is char below 'a'?
 	jb Next			; If so, don't upcase
 
@@ -36,8 +36,8 @@ Scan:
 	sub byte [ebp+ecx], 0x20; Subtract 0x20 from current byte to upcase it
 
 Next:
-	dec ecx			; Decrement ecx
-	jnz Scan		; If not zero, keep scanning
+	cmp ecx, 0		; Is ecx 0?
+	jne Scan		; If not, keep scanning
 
 Write:
 	mov eax, 4		; `sys_read` syscall
@@ -45,6 +45,7 @@ Write:
 	mov ecx, Buffer		; Write byte from buffer
 	mov edx, esi		; Write number of characters that were read
 	int 0x80		; Make syscall
+	jmp Read		; Get another buffer
 
 Exit:
 	mov eax, 1		; `exit` syscall
