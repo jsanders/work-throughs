@@ -35,6 +35,12 @@ build/hexdump.o: src/hexdump.asm
 
 bin/hexdump: build/hexdumputils.o build/hexdump.o
 	$(LD) -o $@ $?
+
+build/sha1.o: src/sha1.asm
+	$(ASM) -o $@ $<
+
+bin/sha1: build/sha1.o
+	$(LD) -o $@ $<
 debug:
 	make bin/template && gdb -x .gdbinit bin/template
 
