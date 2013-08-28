@@ -6,8 +6,11 @@ SECTION .bss
 	Buf resb BufLen
 
 SECTION .data
-	HexStr db "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", 0x0A
+	HexStr db "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
 	HexLen equ $-HexStr
+	AsciiStr db " |................|", 0x0A
+	AsciiLen equ $-AsciiStr
+	FullLen equ $-HexStr
 	Digits db "0123456789ABCDEF"
 
 SECTION .text
@@ -16,7 +19,6 @@ SECTION .text
 ; Returns: Number of bytes read in esi
 ; Modfies: esi, Buf
 ReadBuf:	
-	; Save caller registers
 	push eax
 	push ebx
 	push ecx
@@ -30,47 +32,35 @@ ReadBuf:
 
 	mov esi, eax		; Return number of characters read in esi
 
-	; Restore caller registers
 	pop edx
 	pop ecx
 	pop ebx
 	pop eax
 	ret
 
-WriteHexStr:
-	; Save caller registers
-	push eax
-	push ebx
-	push ecx
-	push edx
+; WriteBuf: Write current line to console
+WriteBuf:
+	pusha
 
 	mov eax, 4		; `sys_write` syscall
 	mov ebx, 1		; Use stdout
 	mov ecx, HexStr		; Write byte from buffer
-	mov edx, HexLen		; Write number of characters that were read
+	mov edx, FullLen	; Write number of characters that were read
 	int 0x80		; Make syscall
 
-	; Restore caller registers
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
+	popa
 	ret
 
-; PrintAtOffset: Print byte at given offset 
-; Input: Offset in ecx
+; PrintCurrentHex: Print hex of character at offset into HexStr
+; Input: offset in ecx
 ; Modifies: HexStr
-UpdateOffset:
-	; Save registers
-	push eax
-	push ebx
-	push edx
-
-	xor eax, eax		; Clear eax
+PrintCurrentHex:
+	pusha
 
 	; Put current character in eax and ebx
-	mov al, byte [Buf+ecx]
-	mov ebx, eax
+	xor eax, eax		; First, clear eax
+	mov al, byte [Buf+ecx]	; Now, get byte in al (thus eax)
+	mov ebx, eax		; Copy to ebx
 
 	; Isolate high nybble
 	shr bl, 4			; Shift high nybble into low bits
@@ -93,10 +83,46 @@ UpdateOffset:
 	mov byte [HexStr+edx], bl	; Write high nybble char
 	mov byte [HexStr+edx+1], al	; Write low nybble char
 
-	; Restore registers
-	pop edx
-	pop ebx
-	pop eax
+	popa
+	ret
+
+; PrintCurrentAscii: Put char or period in AsciiStr
+; Input: offset in ecx
+; Modifies: AsciiStr
+PrintCurrentAscii:
+	pusha
+
+	; Get byte from Buf
+	xor eax, eax		; First, clear eax
+	mov al, byte [Buf+ecx]	; Now, get byte in al (thus eax)
+
+	cmp eax, 0x20		; Is char below 0x20?
+	jb .replace		; If so, replace
+
+	cmp eax, 0x7A		; Is char above 0x7E?
+	ja .replace		; If so, replace
+
+	jmp .update		; Otherwise, just print it
+
+.replace:
+	mov al, 0x2E		; Put a period character in al
+
+.update:
+	mov byte [AsciiStr+ecx+2], al	; Print char into AsciiStr
+
+	popa
+	ret
+
+; PrintCurrentOffset: Print byte at given offset 
+; Input: Offset in ecx
+; Modifies: HexStr, AsciiStr
+PrintCurrentOffset:
+	pusha
+
+	call PrintCurrentHex
+	call PrintCurrentAscii
+
+	popa
 	ret
 
 Exit:
@@ -112,20 +138,16 @@ ReadLine:
 	cmp esi, 0		; Have we reached the end of the file?
 	je Exit			; If so, exit
 
-	mov ebp, Buf		; Address of Buffer
-	mov edi, HexStr		; Address of line string
-
 	xor ecx, ecx		; Clear ecx
-
 ScanLine:
-	call UpdateOffset
+	call PrintCurrentOffset
 
 	; Go to next character and see if we're done
 	inc ecx			; Increment line string pointer
 	cmp ecx, esi		; Compare with number of chars
-	jna ScanLine		; Loop back if ecx is <= number of chars
+	jb ScanLine		; Loop back if ecx is <= number of chars
 
-	call WriteHexStr
+	call WriteBuf
 	jmp ReadLine		; Get another buffer
 
 	call Exit
