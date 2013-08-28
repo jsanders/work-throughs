@@ -27,11 +27,14 @@ build/upcase.o: src/upcase.asm
 bin/upcase: build/upcase.o
 	$(LD) -o $@ $<
 
+build/hexdumputils.o: src/hexdumputils.asm
+	$(ASM) -o $@ $<
+
 build/hexdump.o: src/hexdump.asm
 	$(ASM) -o $@ $<
 
-bin/hexdump: build/hexdump.o
-	$(LD) -o $@ $<
+bin/hexdump: build/hexdumputils.o build/hexdump.o
+	$(LD) -o $@ $?
 debug:
 	make bin/template && gdb -x .gdbinit bin/template
 
