@@ -1,22 +1,18 @@
-struct Monster {
-  health: int,
-  attack: int
+enum Monster {
+  ScubaArgentine(int, int, int, int),
+  IndustrialRaverMonster(int, int, int, int)
 }
 
 impl Monster {
   fn attack(&self) {
-    println(fmt!("The monster attacks for %d damage.", self.attack));
-  }
-
-  fn count() {
-    println("There are a bunch of monsters out tonight.");
-  }
-
-  fn new(health: int, attack: int) -> Monster {
-    Monster { health:health, attack:attack }
+    match *self {
+      ScubaArgentine(l, s, c, w) => println(fmt!("The monster attacks for %d damage.", w)),
+      IndustrialRaverMonster(l, s, c, w) => println(fmt!("The monster attacks for %d damage.", w))
+    }
   }
 }
 
 fn main() {
-  Monster::new(20, 40).attack();
+  let irm = IndustrialRaverMonster(46, 35, 91, 2);
+  irm.attack();
 }
