@@ -1,16 +1,8 @@
-default: build run
+%: %.rs
+	rustc $< -o $@
 
-run: fizzbuzz
-	./fizzbuzz
-
-test: test-fizzbuzz
-	./test-fizzbuzz
-
-fizzbuzz: fizzbuzz.rs
-	rustc fizzbuzz.rs
-
-test-fizzbuzz: fizzbuzz.rs
-	rustc fizzbuzz.rs --test -o test-fizzbuzz
+test-%: %.rs
+	rustc $< --test -o $@
 
 clean:
 	rm -rf *.dSYM && find . -type f -perm +111 | xargs rm -f
