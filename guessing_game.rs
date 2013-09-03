@@ -1,15 +1,14 @@
 use std::io::stdin;
 use std::rand;
 use std::rand::RngUtil;
-use std::num::abs;
-use std::int;
+use std::uint;
 
-fn generate_secret_number() -> int {
-  return abs(rand::rng().gen::<int>() % 100) + 1;
+fn generate_secret_number() -> uint {
+  rand::rng().gen_uint_range(1, 100)
 }
 
-fn process_guess(secret: int, guess: int) -> bool {
-  println(fmt!("You guessed: %d", guess));
+fn process_guess(secret: uint, guess: uint) -> bool {
+  println(fmt!("You guessed: %u", guess));
 
   if guess > secret {
     println("Your guess was too high!");
@@ -35,7 +34,7 @@ fn main() {
 
     let input = stdin().read_line();
 
-    match int::from_str(input) {
+    match uint::from_str(input) {
       Some(number) => {
         if process_guess(secret, number) { break; }
       },
